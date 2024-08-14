@@ -1,0 +1,61 @@
+.page__content--city {
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 70px;
+    width: 100%;
+    background-color: #DFE1E1;
+}
+
+.header__city {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 100px;
+}
+
+.icon__weather--city {
+    position: absolute;
+    top: -70px;
+    left: 80px;
+}
+
+.main__city {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+}
+
+.block__cityTemp {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: absolute;
+    top: -100px;
+}
+
+.daily__info {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tempInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.divider {
+    border: 1px solid #fff;
+}
+
+.icon__back:hover {
+    cursor: pointer;
+    opacity: 0.7;
+}
