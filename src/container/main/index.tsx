@@ -128,7 +128,7 @@ const Main: React.FC = () => {
         if (!searchQuery) return;
 
         try {
-            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${searchQuery}&appid=${API_KEY}`);
+            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${searchQuery}&appid=${API_KEY}`);    
             const data = await response.json();
             if (response.ok) {
                 setCity(data.name);
