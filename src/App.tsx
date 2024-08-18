@@ -11,7 +11,7 @@ function App() {
   const [weatherData, setWeatherData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   return (
-    <WeatherContext.Provider value={{ city, setCity, weatherData, setWeatherData }}>
+    <WeatherContext.Provider value={{ city, setCity, weatherData, setWeatherData, error, setError }}>
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<Main />} />

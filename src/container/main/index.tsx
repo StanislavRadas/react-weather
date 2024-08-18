@@ -165,7 +165,7 @@ const Main: React.FC = () => {
                             </svg>
                         </div>
                         <div>
-                            <span onClick={toggleMenu} className="menu">
+                            <span className="menu">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M1.2 17.6C0.537326 17.6 0 17.0627 0 16.4C0 15.7846 0.463269 15.2774 1.06005 15.208L1.2 15.2H14.4C14.4 13.2118 16.0118 11.6 18 11.6H20.4C22.3882 11.6 24 13.2118 24 15.2V17.6C24 19.5881 22.3882 21.2 20.4 21.2H18C16.0118 21.2 14.4 19.5881 14.4 17.6L1.2 17.6ZM20.4 14H18C17.3846 14 16.8774 14.4633 16.808 15.06L16.8 15.2V17.6C16.8 18.2154 17.2633 18.7226 17.86 18.792L18 18.8H20.4C21.0154 18.8 21.5226 18.3367 21.592 17.74L21.6 17.6V15.2C21.6 14.5846 21.1367 14.0774 20.54 14.008L20.4 14ZM6 2C7.98816 2 9.6 3.61184 9.6 5.6H22.8C23.4627 5.6 24 6.13733 24 6.8C24 7.41539 23.5367 7.92258 22.94 7.99198L22.8 8.00001H9.6C9.6 9.98817 7.98816 11.6 6 11.6H3.6C1.61184 11.6 0 9.98817 0 8.00001V5.60001C0 3.61185 1.61184 2.00001 3.6 2.00001L6 2ZM6 4.4H3.6C2.98461 4.4 2.47742 4.86327 2.40802 5.46005L2.39999 5.6V8C2.39999 8.61539 2.86326 9.12258 3.46003 9.19198L3.59999 9.20001H5.99999C6.61538 9.20001 7.12257 8.73674 7.19196 8.13997L7.2 8.00001V5.60001C7.2 4.98462 6.73673 4.47743 6.13995 4.40804L6 4.4Z" fill="#FBFBFB"/>
                                 </svg>
@@ -247,11 +247,11 @@ const Main: React.FC = () => {
                                     </div>
                                     </React.Fragment>
                                 ) : (
-                                        <div className="block__info__stats">
-                                            <span className="loading-text stat">Loading weather data...</span>
-                                            <span className="loading-text stat">Loading weather data...</span>
-                                            <span className="loading-text stat">Loading weather data...</span>
-                                        </div>)
+                                    <div className="block__info__stats">
+                                        <span className="loading-text stat">Loading weather data...</span>
+                                        <span className="loading-text stat">Loading weather data...</span>
+                                        <span className="loading-text stat">Loading weather data...</span>
+                                    </div>)
                             }
                         </div>
                     </main>
