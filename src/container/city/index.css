@@ -1,3 +1,8 @@
+:root {
+   --bg-main: #DFE1E1;
+   --color-white: #fff;
+}
+
 .page__content--city {
     padding: 16px;
     border-radius: 12px;
@@ -6,7 +11,7 @@
     align-items: center;
     gap: 70px;
     width: 100%;
-    background-color: #DFE1E1;
+    background-color: var(--bg-main);
 }
 
 .header__city {
@@ -19,8 +24,8 @@
 
 .icon__weather--city {
     position: absolute;
-    top: -70px;
-    left: 80px;
+    top: -20px;
+    left: 120px;
 }
 
 .main__city {
@@ -52,10 +57,17 @@
 }
 
 .divider {
-    border: 1px solid #fff;
+    border: 1px solid var(--color-white);
 }
 
 .icon__back:hover {
     cursor: pointer;
     opacity: 0.7;
+}
+
+.error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 24px;
 }

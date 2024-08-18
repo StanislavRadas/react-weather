@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from 'react-router-dom';
+import { WeatherContext } from "../../App";
 import "./index.css";
 import back from "./icon/icon_back.svg"
 import sunny from "../main/icon/icon_sunny.svg";
@@ -12,82 +13,22 @@ import fog from "../main/icon/icon_fog.svg";
 
 const City: React.FC = () => {
 
-    const API_KEY = '4ee8a5b2ffae806d12f2b88390b4a76a';
-
-    const [city, setCity] = useState<string | null>(null);
+    const { setCity, setWeatherData, weatherData, city } = useContext(WeatherContext);
     const [error, setError] = useState<string | null>(null);
-    const [weatherData, setWeatherData] = useState<any>(null);
-    const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
     const navigate = useNavigate();
     const handleBack = () => {
         navigate('/')
     }
     
+    const convertedTime = (timestamp: number) => {
+        return new Date(timestamp * 1000).toLocaleTimeString();
+    };
 
-    useEffect(() => {
-        if (!navigator.geolocation) {
-            setError("Geolocation is not supported!");
-            return;
-        }
+    const day = new Date().toLocaleDateString();
+    const hours = new Date().getHours();
+    const minutes = new Date().getMinutes();
 
-        let isMounted = true;
-
-        const fetchCityAndWeatherData = async (lat: number, lon: number) => {
-            try {
-                const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
-                const data = await response.json();
-                if (response.ok && isMounted) {
-                    setCity(data.name);
-                    setWeatherData(data);
-                    setError(null);
-                } else {
-                    throw new Error("Failed to fetch weather data");
-                }
-            } catch (error: any) {
-                if (isMounted) {
-                    setError(error.message || "Failed to fetch data");
-                }
-            }
-        };
-
-        const handleSuccess = (position: GeolocationPosition) => {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-
-            
-            if (!weatherData) {
-                fetchCityAndWeatherData(lat, lon);
-            }
-        };
-
-        const handleError = (error: GeolocationPositionError) => {
-            if (isMounted) {
-                setError(`Geolocation error: ${error.message}`);
-            }
-        };
-
-        navigator.geolocation.getCurrentPosition(handleSuccess, handleError);
-
-        return () => {
-            isMounted = false;
-        };
-    }, [weatherData]);
-
-    function convertedTime(time: number): string {
-        const date = new Date(time * 1000);
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${hours}:${minutes}`;
-    }
-
-
-    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-    const day = daysOfWeek[currentDateTime.getDay()];
-    const hours = currentDateTime.getHours().toString().padStart(2, '0');
-    const minutes = currentDateTime.getMinutes().toString().padStart(2, '0');
-    
 
     const IconWeather: React.FC<{ weatherData:any}> = ({weatherData}) => {
         const getIcon = (weatherMain: string) => {
@@ -113,7 +54,7 @@ const City: React.FC = () => {
         return (
         <div className="icon__weather--city">
             { weatherData && weatherData.weather && weatherData.weather[0] &&
-            (<img src={getIcon(weatherData.weather[0].main)} alt={weatherData.weather[0].description} width={310} height={290} />)}
+            (<img src={getIcon(weatherData.weather[0].main)} alt={weatherData.weather[0].description} width={210} height={190} />)}
         </div>
         )
     }
@@ -132,41 +73,43 @@ const City: React.FC = () => {
                     <main className="main__city">
                         <div className="block__cityTemp">
                             <span className="title__city">{error ? error : (city ? city : <span className="loading-text">Loading city...</span>)}</span>
-                            <span className="temparute">{error ? (error) : weatherData ? `${Math.round(weatherData.main.temp / 10)}°C` : <span className="loading-text">Loading weather...</span>}</span>
+                            <span className="temparute">{error ? error : weatherData ? `${Math.round(weatherData.main.temp - 273.15)}°C` : <span className="loading-text">Loading weather...</span>}</span>
                             <span className="date">{day}, {hours}:{minutes}</span>
                         </div>
                         <div>
-                            {error ? (<div className="error">{error}</div>) : weatherData ? (
-                            <div className="daily__info">
-                                <div className="tempInfo">
-                                    <span className="stat">Temp min: {Math.round(weatherData.main.temp_min / 10)}°C</span> 
-                                    <span className="stat">Temp max: {Math.round(weatherData.main.temp_max) / 10}°C</span>
+                            {error ? (
+                                <div className="error">{error}</div>
+                            ) : weatherData ? (
+                                <div className="daily__info">
+                                    <div className="tempInfo">
+                                        <span className="stat">Temp min: {Math.round(weatherData.main.temp_min - 273.15)}°C</span> 
+                                        <span className="stat">Temp max: {Math.round(weatherData.main.temp_max - 273.15)}°C</span>
+                                    </div>
+                                    <div className="tempInfo">
+                                        <span className="stat">Sunrise: {convertedTime(weatherData.sys.sunrise)}</span> 
+                                        <span className="stat">Sunset: {convertedTime(weatherData.sys.sunset)}</span>
+                                    </div>  
+                                    <div className="stat_vis">
+                                        <span className="stat">Visibility: {weatherData.visibility / 1000} km</span> 
+                                    </div>
+                                    <div>
+                                        <span className="stat">Clouds: {weatherData.clouds.all}%</span> 
+                                    </div>    
                                 </div>
-                                <div className="tempInfo">
-                                    <span className="stat">Sunrise: {convertedTime(weatherData.sys.sunrise)}</span> 
-                                    <span className="stat">Sunset: {convertedTime(weatherData.sys.sunset)}</span>
-                                </div>  
-                                <div className="stat_vis">
-                                    <span className="stat">Visibility: {weatherData.visibility / 1000} km</span> 
-                                </div>
-                                <div>
-                                    <span className="stat">Clouds: {weatherData.clouds.all}</span> 
-                                </div>    
-                            </div>
                             ) : (
-                            <div className="block__info__stats">
-                                <span className="loading-text stat">Loading weather data...</span>
-                                <span className="loading-text stat">Loading weather data...</span>
-                                <span className="loading-text stat">Loading weather data...</span>
-                            </div>)
-                            }
+                                <div className="block__info__stats">
+                                    <span className="loading-text stat">Loading weather data...</span>
+                                    <span className="loading-text stat">Loading weather data...</span>
+                                    <span className="loading-text stat">Loading weather data...</span>
+                                </div>
+                            )}
                         </div>
                         <div className="divider"></div>
                         <div className="stats__city">
-                            {error ?
-                                (<div className="error">{error}</div>) : 
-                                weatherData ? (
-                                    <React.Fragment>
+                            {error ? (
+                                <div className="error">{error}</div>
+                            ) : weatherData ? (
+                                <React.Fragment>
                                     <div className="stats__block">
                                             <span className="icon__stats">
                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -209,14 +152,10 @@ const City: React.FC = () => {
                                         </span>
                                         <span className="stat">Wind: {weatherData.wind.speed} km/h</span>
                                     </div>
-                                    </React.Fragment>
-                                ) : (
-                                    <div className="block__info__stats">
-                                        <span className="loading-text stat">Loading weather data...</span>
-                                        <span className="loading-text stat">Loading weather data...</span>
-                                        <span className="loading-text stat">Loading weather data...</span>
-                                    </div>)
-                            }
+                                </React.Fragment>
+                            ) : (
+                                <div className="loading-text stat">Loading...</div>
+                            )}
                         </div>
                     </main>
                 </div>

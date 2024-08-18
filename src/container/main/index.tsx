@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext} from "react";
+import { WeatherContext } from "../../App";
 import { useNavigate } from 'react-router-dom';
 import "./index.css";
 import sunny from "./icon/icon_sunny.svg";
@@ -8,18 +9,56 @@ import snow from "./icon/icon_snow.svg";
 import storm from "./icon/icon_storm.svg";
 import clouds from "./icon/icon_clouds.svg";
 import fog from "./icon/icon_fog.svg";
+import searchIcon from "./icon/search.svg";
+import home from "./icon/icon_home.svg";
+
+
+const IconWeather: React.FC<{ weatherData:any}> = ({weatherData}) => {
+        const getIcon = (weatherMain: string) => {
+            switch (weatherMain) {
+                case "Clear":
+                    return sunny;
+                case "Clouds":
+                    return clouds;
+                case "Snow":
+                    return snow;
+                case "Rain":
+                    return rain;
+                case "Drizzle":
+                    return drizzle;
+                case "Thunderstorm":
+                    return storm;
+                case "Atmosphere":
+                    return fog;
+                default:
+                    return sunny
+            }
+        }
+        return (
+        <div className="icon__weather">
+            { weatherData && weatherData.weather && weatherData.weather[0] &&
+            (<img src={getIcon(weatherData.weather[0].main)} alt={weatherData.weather[0].description} width={210} height={190} />)}
+        </div>
+        )
+    }
 
 
 const Main: React.FC = () => {
-
-    const [city, setCity] = useState<string | null>(null);
+    const { setCity, setWeatherData, weatherData, city } = useContext(WeatherContext);
     const [error, setError] = useState<string | null>(null);
     const [currentDateTime, setCurrentDateTime] = useState(new Date());
-    const [weatherData, setWeatherData] = useState<any>(null);
+    const [search, setSearch] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+
 
     const API_KEY = '4ee8a5b2ffae806d12f2b88390b4a76a';
+
+    const toggleMenu = () => {
+        setSearch(!search);
+    };
     
     useEffect(() => {
+        if (weatherData) return;
         if (!navigator.geolocation) {
             setError("Geolocation is not supported!");
             return;
@@ -83,34 +122,27 @@ const Main: React.FC = () => {
         navigate('/city')
     }
 
-    const IconWeather: React.FC<{ weatherData:any}> = ({weatherData}) => {
-        const getIcon = (weatherMain: string) => {
-            switch (weatherMain) {
-                case "Clear":
-                    return sunny;
-                case "Clouds":
-                    return clouds;
-                case "Snow":
-                    return snow;
-                case "Rain":
-                    return rain;
-                case "Drizzle":
-                    return drizzle;
-                case "Thunderstorm":
-                    return storm;
-                case "Atmosphere":
-                    return fog;
-                default:
-                    return sunny
+    const handleSearchSubmit = async (event: React.FormEvent) => {
+        event.preventDefault();
+
+        if (!searchQuery) return;
+
+        try {
+            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${searchQuery}&appid=${API_KEY}`);
+            const data = await response.json();
+            if (response.ok) {
+                setCity(data.name);
+                setWeatherData(data);
+                setError(null);
+            } else {
+                setError(data.message || "Failed to fetch weather data for the city");
             }
+        } catch (error: any) {
+            setError(error.message || "Failed to fetch data");
         }
-        return (
-        <div className="icon__weather">
-            { weatherData && weatherData.weather && weatherData.weather[0] &&
-            (<img src={getIcon(weatherData.weather[0].main)} alt={weatherData.weather[0].description} width={210} height={190} />)}
-        </div>
-        )
-    }
+
+        toggleMenu();
+    };
     
     const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -132,10 +164,12 @@ const Main: React.FC = () => {
                             <path d="M19.7718 47.121C19.7718 47.121 19.6765 46.7942 19.4858 46.1406C19.3224 45.487 19.0773 44.5883 18.7505 43.4444C18.4509 42.3006 18.0969 40.9934 17.6884 39.5227C17.2799 38.0521 16.8305 36.4861 16.3403 34.8249C15.8773 33.1636 15.3871 31.4887 14.8697 29.8002C14.3795 28.1117 13.8892 26.4912 13.399 24.9389C13.1539 24.1219 12.759 23.5227 12.2143 23.1414C11.6969 22.7602 10.9752 22.5559 10.0492 22.5287C10.022 22.5014 10.0084 22.4742 10.0084 22.447C9.98116 22.3925 9.95392 22.3517 9.92669 22.3244L10.2126 20.241C10.2126 20.241 10.4986 20.2546 11.0705 20.2819C11.6697 20.3091 12.3505 20.3363 13.1131 20.3636C13.8756 20.3636 14.502 20.3636 14.9922 20.3636C16.0271 20.3636 17.0075 20.3363 17.9335 20.2819C18.8867 20.2002 19.6765 20.1321 20.3029 20.0776C20.9292 19.9959 21.2424 19.9551 21.2424 19.9551L21.4058 20.2819L21.2016 22.2427C20.3029 22.2972 19.6084 22.3925 19.1182 22.5287C18.6552 22.6376 18.3284 22.801 18.1378 23.0189C17.9743 23.2095 17.8926 23.4819 17.8926 23.8359C17.8926 24.081 17.9743 24.5849 18.1378 25.3474C18.3012 26.11 18.5054 27.0359 18.7505 28.1253C19.0229 29.2146 19.3224 30.3857 19.6492 31.6385C19.9761 32.8912 20.2892 34.1304 20.5888 35.3559C20.9156 36.5542 21.2016 37.6572 21.4467 38.6649C21.719 39.6453 21.9233 40.4351 22.0595 41.0342C22.2229 41.6061 22.3046 41.8921 22.3046 41.8921H22.7131C23.0126 41.0751 23.3258 40.19 23.6526 39.2368C24.0067 38.2563 24.3607 37.2351 24.7148 36.1729C25.0961 35.1108 25.4637 34.0351 25.8178 32.9457C26.1718 31.8291 26.5258 30.7397 26.8799 29.6776C27.2339 28.6155 27.5743 27.6078 27.9012 26.6546C27.8195 26.3006 27.7378 25.9602 27.6561 25.6334C27.5743 25.2793 27.479 24.9389 27.3701 24.6121C27.1522 23.8495 26.7709 23.3185 26.2263 23.0189C25.7088 22.7193 24.9599 22.5559 23.9795 22.5287L23.8161 22.3244L24.1429 20.241C24.1429 20.241 24.3199 20.2546 24.6739 20.2819C25.0552 20.2819 25.5182 20.2955 26.0629 20.3227C26.6075 20.3227 27.1658 20.3363 27.7378 20.3636C28.3097 20.3636 28.7863 20.3636 29.1675 20.3636C30.0663 20.3636 30.9922 20.3363 31.9454 20.2819C32.9258 20.2002 33.7429 20.1321 34.3965 20.0776C35.0773 19.9959 35.4178 19.9551 35.4178 19.9551L35.5812 20.2819L35.3769 22.2427C34.4782 22.2972 33.7837 22.3789 33.2935 22.4878C32.8305 22.5968 32.5037 22.7602 32.3131 22.978C32.1497 23.1959 32.068 23.4955 32.068 23.8768C32.068 24.0946 32.1361 24.5712 32.2722 25.3066C32.4356 26.0419 32.6535 26.9678 32.9258 28.0844C33.1982 29.1738 33.4841 30.3449 33.7837 31.5976C34.1105 32.8232 34.4237 34.0487 34.7233 35.2742C35.0501 36.4725 35.3497 37.5755 35.622 38.5832C35.8943 39.5908 36.1122 40.3942 36.2756 40.9934C36.439 41.5925 36.5207 41.8921 36.5207 41.8921H36.8884C37.1607 41.1568 37.4875 40.2444 37.8688 39.1551C38.2501 38.0385 38.6586 36.8402 39.0943 35.5602C39.5573 34.2529 40.0067 32.9593 40.4424 31.6793C40.8782 30.3721 41.2731 29.1602 41.6271 28.0436C41.9812 26.8997 42.2671 25.9466 42.485 25.184C42.7029 24.3942 42.8118 23.904 42.8118 23.7134C42.8118 23.2232 42.6212 22.8827 42.2399 22.6921C41.8586 22.5014 41.2186 22.4061 40.3199 22.4061H38.5224L38.359 22.2019L38.6858 20.1185C38.6858 20.1185 38.9854 20.1457 39.5846 20.2002C40.1837 20.2274 40.919 20.2683 41.7905 20.3227C42.6892 20.35 43.5744 20.3636 44.4458 20.3636C45.0995 20.3636 45.7667 20.3636 46.4475 20.3636C47.1284 20.3363 47.7003 20.3091 48.1633 20.2819C48.6263 20.2546 48.8578 20.241 48.8578 20.241L48.5718 22.5287C47.8637 22.5559 47.3599 22.7057 47.0603 22.978C46.7607 23.2232 46.4612 23.7406 46.1616 24.5304L38.1956 46.2632L33.9471 47.121C33.9199 46.9304 33.7837 46.3585 33.5386 45.4053C33.2935 44.4521 32.9667 43.2266 32.5582 41.7287C32.1769 40.2308 31.7275 38.5559 31.2101 36.704C30.6926 34.8521 30.1343 32.9457 29.5352 30.9849H29.2084L24.0612 46.2632L19.7718 47.121ZM50.7608 46.9168C49.8893 46.9168 49.2357 46.6717 48.8 46.1814C48.3642 45.664 48.1464 45.0376 48.1464 44.3023C48.1464 43.458 48.4051 42.7636 48.9225 42.2189C49.4672 41.6742 50.1617 41.4019 51.0059 41.4019C51.8774 41.4019 52.5311 41.6606 52.9668 42.178C53.4298 42.6683 53.6613 43.2946 53.6613 44.0572C53.6613 44.847 53.4025 45.5278 52.8851 46.0997C52.3676 46.6444 51.6596 46.9168 50.7608 46.9168Z" fill="#FBFBFB"/>
                             </svg>
                         </div>
-                        <div className="menu">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M1.2 17.6C0.537326 17.6 0 17.0627 0 16.4C0 15.7846 0.463269 15.2774 1.06005 15.208L1.2 15.2H14.4C14.4 13.2118 16.0118 11.6 18 11.6H20.4C22.3882 11.6 24 13.2118 24 15.2V17.6C24 19.5881 22.3882 21.2 20.4 21.2H18C16.0118 21.2 14.4 19.5881 14.4 17.6L1.2 17.6ZM20.4 14H18C17.3846 14 16.8774 14.4633 16.808 15.06L16.8 15.2V17.6C16.8 18.2154 17.2633 18.7226 17.86 18.792L18 18.8H20.4C21.0154 18.8 21.5226 18.3367 21.592 17.74L21.6 17.6V15.2C21.6 14.5846 21.1367 14.0774 20.54 14.008L20.4 14ZM6 2C7.98816 2 9.6 3.61184 9.6 5.6H22.8C23.4627 5.6 24 6.13733 24 6.8C24 7.41539 23.5367 7.92258 22.94 7.99198L22.8 8.00001H9.6C9.6 9.98817 7.98816 11.6 6 11.6H3.6C1.61184 11.6 0 9.98817 0 8.00001V5.60001C0 3.61185 1.61184 2.00001 3.6 2.00001L6 2ZM6 4.4H3.6C2.98461 4.4 2.47742 4.86327 2.40802 5.46005L2.39999 5.6V8C2.39999 8.61539 2.86326 9.12258 3.46003 9.19198L3.59999 9.20001H5.99999C6.61538 9.20001 7.12257 8.73674 7.19196 8.13997L7.2 8.00001V5.60001C7.2 4.98462 6.73673 4.47743 6.13995 4.40804L6 4.4Z" fill="#FBFBFB"/>
-                            </svg>
+                        <div>
+                            <span onClick={toggleMenu} className="menu">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1.2 17.6C0.537326 17.6 0 17.0627 0 16.4C0 15.7846 0.463269 15.2774 1.06005 15.208L1.2 15.2H14.4C14.4 13.2118 16.0118 11.6 18 11.6H20.4C22.3882 11.6 24 13.2118 24 15.2V17.6C24 19.5881 22.3882 21.2 20.4 21.2H18C16.0118 21.2 14.4 19.5881 14.4 17.6L1.2 17.6ZM20.4 14H18C17.3846 14 16.8774 14.4633 16.808 15.06L16.8 15.2V17.6C16.8 18.2154 17.2633 18.7226 17.86 18.792L18 18.8H20.4C21.0154 18.8 21.5226 18.3367 21.592 17.74L21.6 17.6V15.2C21.6 14.5846 21.1367 14.0774 20.54 14.008L20.4 14ZM6 2C7.98816 2 9.6 3.61184 9.6 5.6H22.8C23.4627 5.6 24 6.13733 24 6.8C24 7.41539 23.5367 7.92258 22.94 7.99198L22.8 8.00001H9.6C9.6 9.98817 7.98816 11.6 6 11.6H3.6C1.61184 11.6 0 9.98817 0 8.00001V5.60001C0 3.61185 1.61184 2.00001 3.6 2.00001L6 2ZM6 4.4H3.6C2.98461 4.4 2.47742 4.86327 2.40802 5.46005L2.39999 5.6V8C2.39999 8.61539 2.86326 9.12258 3.46003 9.19198L3.59999 9.20001H5.99999C6.61538 9.20001 7.12257 8.73674 7.19196 8.13997L7.2 8.00001V5.60001C7.2 4.98462 6.73673 4.47743 6.13995 4.40804L6 4.4Z" fill="#FBFBFB"/>
+                                </svg>
+                            </span>
                         </div>
                     </header>
                     <main className="main__block">
@@ -149,12 +183,12 @@ const Main: React.FC = () => {
                                     ) : weatherData ? (
                                             <div className="flex">
                                                 <div className="flex_column">
-                                                    <span className="temparute">{Math.round(weatherData.main.temp / 10)}°C</span>
+                                                    <span className="temparute">{Math.round(weatherData.main.temp - 273.15)}°C</span>
                                                     <span className="date">{day}, {hours}:{minutes}</span>
                                                 </div>
                                                 <div className="info__city">
                                                     <span className="stats__1">Outside: {weatherData.weather[0].description}</span>
-                                                    <span className="stats__2">Feels like: {Math.round(weatherData.main.feels_like / 10)}°C</span>
+                                                    <span className="stats__2">Feels like: {Math.round(weatherData.main.feels_like - 273.15)}°C</span>
                                                 </div>
                                         </div>
                                     ) : (
@@ -222,24 +256,27 @@ const Main: React.FC = () => {
                         </div>
                     </main>
                     <footer className="footer">
+                        {!search &&
                         <div className="home">
-                            <span className="icon__home">
-                                <svg width="30" height="38" viewBox="0 0 30 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <g filter="url(#filter0_b_0_239)">
-                                <path d="M20.3561 22H9.38746C8.22384 22 7.10787 21.5378 6.28506 20.7149C5.46225 19.8921 5 18.7762 5 17.6125V10.7111C4.99998 9.95665 5.19449 9.21498 5.56474 8.55768C5.93499 7.90038 6.46847 7.34965 7.11366 6.95868L12.598 3.63518C13.2837 3.21968 14.0701 3 14.8718 3C15.6735 3 16.4599 3.21968 17.1456 3.63518L22.6299 6.95868C23.275 7.34956 23.8083 7.90011 24.1786 8.5572C24.5488 9.2143 24.7434 9.95574 24.7436 10.71V17.6125C24.7436 18.7762 24.2813 19.8921 23.4585 20.7149C22.6357 21.5378 21.5197 22 20.3561 22Z" fill="#C4C4C4"/>
-                                <path d="M11.5812 17.6114H18.1624" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
-                                </g>
-                                <path d="M7.64475 32.576L7.68075 35H6.44475L6.50475 32.684L6.49275 31.64L4.52475 31.628L2.72475 31.64L2.71275 32.576L2.76075 35H1.53675L1.58475 32.684L1.53675 27.296H2.77275L2.73675 30.608L4.62075 30.632L6.48075 30.608L6.44475 27.296H7.70475L7.64475 32.576ZM11.5318 29.36C12.3078 29.36 12.9038 29.604 13.3198 30.092C13.7438 30.572 13.9558 31.256 13.9558 32.144C13.9558 33.096 13.7318 33.828 13.2838 34.34C12.8358 34.852 12.1998 35.108 11.3758 35.108C10.5998 35.108 9.99981 34.868 9.57581 34.388C9.15981 33.9 8.95181 33.212 8.95181 32.324C8.95181 31.372 9.17581 30.64 9.62381 30.128C10.0718 29.616 10.7078 29.36 11.5318 29.36ZM11.4598 30.212C10.5478 30.212 10.0918 30.828 10.0918 32.06C10.0918 32.812 10.2038 33.368 10.4278 33.728C10.6518 34.088 10.9958 34.268 11.4598 34.268C11.9158 34.268 12.2558 34.116 12.4798 33.812C12.7038 33.508 12.8158 33.044 12.8158 32.42C12.8158 31.668 12.7038 31.112 12.4798 30.752C12.2558 30.392 11.9158 30.212 11.4598 30.212ZM22.0243 31.364C22.0323 31.06 21.9603 30.824 21.8083 30.656C21.6643 30.48 21.4523 30.392 21.1723 30.392C20.7163 30.392 20.2443 30.624 19.7563 31.088L19.7323 32.576L19.7923 35H18.5563L18.6403 31.364C18.6483 31.06 18.5763 30.824 18.4243 30.656C18.2803 30.48 18.0683 30.392 17.7883 30.392C17.3243 30.392 16.8443 30.632 16.3483 31.112L16.3363 32.576L16.4083 35H15.1843L15.2563 32.684L15.1963 29.552L16.3603 29.444L16.3483 30.248H16.4323C16.9043 29.832 17.3963 29.548 17.9083 29.396C18.3563 29.396 18.7243 29.476 19.0123 29.636C19.3083 29.788 19.5163 30.008 19.6363 30.296H19.7083C20.1963 29.872 20.7243 29.572 21.2923 29.396C21.9083 29.396 22.3723 29.536 22.6843 29.816C23.0043 30.096 23.1603 30.496 23.1523 31.016L23.1163 32.576L23.1763 35H21.9523L22.0243 31.364ZM28.8851 32.288L25.5131 32.3C25.5211 32.908 25.6691 33.372 25.9571 33.692C26.2451 34.004 26.6531 34.16 27.1811 34.16C27.7331 34.16 28.2731 33.996 28.8011 33.668L28.9211 33.74L28.7411 34.724C28.1571 34.98 27.5891 35.108 27.0371 35.108C26.2131 35.108 25.5651 34.856 25.0931 34.352C24.6291 33.84 24.3971 33.144 24.3971 32.264C24.3971 31.376 24.6291 30.672 25.0931 30.152C25.5571 29.632 26.1851 29.372 26.9771 29.372C27.6491 29.372 28.1651 29.556 28.5251 29.924C28.8931 30.292 29.0771 30.812 29.0771 31.484C29.0771 31.668 29.0571 31.888 29.0171 32.144L28.8851 32.288ZM27.9731 31.34C27.9731 30.964 27.8851 30.68 27.7091 30.488C27.5411 30.296 27.2931 30.2 26.9651 30.2C26.5971 30.2 26.2931 30.32 26.0531 30.56C25.8131 30.792 25.6531 31.124 25.5731 31.556L27.9491 31.508L27.9731 31.34Z" fill="#C4C4C4"/>
-                                <defs>
-                                <filter id="filter0_b_0_239" x="-3" y="-6" width="36" height="36" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-                                <feGaussianBlur in="BackgroundImageFix" stdDeviation="3"/>
-                                <feComposite in2="SourceAlpha" operator="in" result="effect1_backgroundBlur_0_239"/>
-                                <feBlend mode="normal" in="SourceGraphic" in2="effect1_backgroundBlur_0_239" result="shape"/>
-                                </filter>
-                                </defs>
-                                </svg>
-                            </span>
+                            <img src={home} alt="home" />
+                        </div>}
+                        <div className="search">
+                            {!search && <div className="icon__search"><img onClick={toggleMenu} src={searchIcon} alt="search" /></div>}
+                            {search && (
+                                <div className="search__block">
+                                    <span className="search__title">Please enter the city name</span>
+                                    <form onSubmit={handleSearchSubmit} className="form__search">
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Search for a city..."
+                                            className="search-input"
+                                        />
+                                        <button type="submit" className="search-button">Search</button>
+                                    </form>
+                                </div>
+                            )}
                         </div>
                     </footer>
                 </div>
